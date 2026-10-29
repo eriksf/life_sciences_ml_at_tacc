@@ -149,7 +149,7 @@ Running a chat interface to LLMs
 --------------------------------
 
 As a demonstration, we will learn how to run a chat interface to LLMs using the open-source tools
-`Open WebUI <https://github.com/open-webui/open-webui>`__  and `Ollama <https://ollama.com/>`_.
+`Open WebUI <https://openwebui.com/>`__  and `Ollama <https://ollama.com/>`_.
 Open WebUI is a web-based interface for interacting with LLMs, while Ollama is a command-line tool for running
 LLMs locally. In keeping with the theme of the previous section, we will run these tools in a container on an
 HPC system.
@@ -176,72 +176,86 @@ We will use the open-source `Firefox <https://www.mozilla.org/en-US/firefox/new/
    [vista]$ cd $SCRATCH
 
    # Download the Firefox install script
-   [vista]$ wget https://raw.githubusercontent.com/TACC/life_sciences_ml_at_tacc/refs/heads/main/docs/section5/files/install_firefox_linux-aarch64.sh
+   [vista]$ wget https://raw.githubusercontent.com/TACC/life_sciences_ml_at_tacc/refs/heads/main/docs/section5/files/install_firefox_linux.sh
 
    # Run the install script
-   [vista]$ . ./install_firefox_linux-aarch64.sh
+   [vista]$ ./install_firefox_linux.sh
+   ./install_firefox_linux.sh 
    Downloading firefox...
    Extracting firefox to /home1/03762/eriksf/bin...
    Linking /home1/03762/eriksf/bin/firefox/firefox to ff...
-   Adding /home1/03762/eriksf/bin/ff to PATH...
-
-   To permanently add '/home1/03762/eriksf/bin' to your PATH, add 'export PATH=$PATH:/home1/03762/eriksf/bin' to /home1/03762/eriksf/.bashrc
+   Adding /home1/03762/eriksf/bin to PATH...
+   Yes, /home1/03762/eriksf/bin is already in your PATH.
 
 Run the Open WebUI/Ollama container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next, we will run the Open WebUI/Ollama container. To simplify the process, we will download and run a "start" script
-that will automatically load the apptainer module, pull the container, create some data directories, and run it
-with the appropriate options.
+that will automatically load the apptainer module, pull the container, create some data directories, download some
+models, and run it with the appropriate options.
 
 .. code-block:: console
 
     # Download the start script
     [vista]$ wget https://raw.githubusercontent.com/TACC/life_sciences_ml_at_tacc/refs/heads/main/docs/section5/files/start-openwebui.sh
-    
+
     # Run the start script
-    [vista]$ . ./start-openwebui.sh 
+    [vista]$ ./start-openwebui.sh 
 
-    Currently Loaded Modules:
-      1) ucc/1.3.0      4) TACC            7) nvpl/25.3
-      2) ucx/1.18.0     5) gcc/15.1.0      8) python3/3.11.8
-      3) cmake/3.31.5   6) openmpi/5.0.5   9) tacc-apptainer/1.3.3
-
- 
-
-    Pulling open-webui image...
     INFO:    Converting OCI blobs to SIF format
     INFO:    Starting build...
-    Copying blob 943331d8a9a9 skipped: already exists  
-    Copying blob 4f4fb700ef54 skipped: already exists  
-    Copying blob be2fefeabb18 skipped: already exists  
-    Copying blob 394dbe96ba14 skipped: already exists  
-    Copying blob fa086b39bd17 skipped: already exists  
-    Copying blob 8318bf964db3 skipped: already exists  
-    Copying blob 4f4fb700ef54 skipped: already exists  
-    Copying blob 038636157489 skipped: already exists  
-    Copying blob 0e5ecbd2fab7 skipped: already exists  
-    Copying blob 441fae03f8ac done   | 
-    Copying blob b6fe75420efd done   | 
-    Copying blob 3b4e68a21a6d skipped: already exists  
-    Copying blob e6f9fdfad974 done   | 
-    Copying blob 22e9a58f5348 done   | 
-    Copying blob b924c02ac309 skipped: already exists  
-    Copying blob df007eea74a3 skipped: already exists  
-    Copying config e72d74e30b done   | 
-    Writing manifest to image destination
-    2025/05/12 12:24:52  info unpack layer: sha256:943331d8a9a9863299c02e5de6cce58602a5bc3dc564315aa886fe706376f27f
-    ...
+    INFO:    Fetching OCI image...
+    56.0MiB / 56.0MiB [============================================================] 100 % 0.0 b/s 0s
+    38.9MiB / 38.9MiB [============================================================] 100 % 0.0 b/s 0s
+    458.0MiB / 458.0MiB [==========================================================] 100 % 0.0 b/s 0s
+    INFO:    Extracting OCI image...
+    2026/10/26 12:59:23  warn rootless{usr/lib/aarch64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-ptp-helper} ignoring (usually) harmless EPERM on setxattr "security.capability"
+    INFO:    Inserting Apptainer configuration...
     INFO:    Creating SIF file...
-    Creating data directories, if needed...
-    Creating secret key...
-    Starting open-webui instance...
-    Running start script...
-    To stop open-webui, type 'apptainer instance stop openwebui1'
-
-    [vista]$ apptainer instance list
-    INSTANCE NAME    PID        IP    IMAGE
-    openwebui1       1435449          /tmp/rootfs-1217685323/root
+    INFO:    To see mksquashfs output with progress bar enable verbose logging
+    INFO:    Converting OCI blobs to SIF format
+    INFO:    Starting build...
+    INFO:    Fetching OCI image...
+    17.4MiB / 17.4MiB [============================================================] 100 % 0.0 b/s 0s
+    26.8MiB / 26.8MiB [============================================================] 100 % 0.0 b/s 0s
+    3.0MiB / 3.0MiB [==============================================================] 100 % 0.0 b/s 0s
+    441.7KiB / 441.7KiB [==========================================================] 100 % 0.0 b/s 0s
+    1.6MiB / 1.6MiB [==============================================================] 100 % 0.0 b/s 0s
+    950.5MiB / 950.5MiB [==========================================================] 100 % 0.0 b/s 0s
+    302.1MiB / 302.1MiB [==========================================================] 100 % 0.0 b/s 0s
+    1.7GiB / 1.7GiB [==============================================================] 100 % 0.0 b/s 0s
+    95.3MiB / 95.3MiB [============================================================] 100 % 0.0 b/s 0s
+    INFO:    Extracting OCI image...
+    INFO:    Inserting Apptainer configuration...
+    INFO:    Creating SIF file...
+    INFO:    To see mksquashfs output with progress bar enable verbose logging
+    INFO:    gocryptfs not found, will not be able to use gocryptfs
+    INFO:    instance started successfully
+    tika up
+    INFO:    gocryptfs not found, will not be able to use gocryptfs
+    INFO:    instance started successfully
+    webui up
+    🔍 Checking Ollama model installations...
+    ----------------------------------------
+    📥 llama3.3:latest not found. Pulling now...
+    pulling manifest 
+    pulling 4824460d29f2: 100% ▕████████████████████████████████████████████████████████████████▏  42 GB                         
+    pulling 53a87df39647: 100% ▕████████████████████████████████████████████████████████████████▏ 5.6 KB                         
+    pulling c7091aa45e9b: 100% ▕████████████████████████████████████████████████████████████████▏  562 B                         
+    verifying sha256 digest 
+    writing manifest 
+    success 
+    📥 nomic-embed-text:latest not found. Pulling now...
+    pulling manifest 
+    pulling 970aa74c0a90: 100% ▕████████████████████████████████████████████████████████████████▏ 274 MB                         
+    pulling c71d239df917:  96% ▕█████████████████████████████████████████████████████████████   ▏  10 KB/ 11 KB                  
+    pulling 31df23ea7daa: 100% ▕████████████████████████████████████████████████████████████████▏  420 B                         
+    verifying sha256 digest 
+    writing manifest 
+    success 
+    🎉 All models are verified and ready!
+    Open WebUI: http://127.0.0.1:8080
+    Ctrl-C to stop all instances
 
 
 Open Web Interface
@@ -271,22 +285,23 @@ Now, fill out the form to create an admin account.
 
    Open WebUI admin account creation.
 
-With the account created, we now need to load our first model. Navigate to the lower left corner of the
-page and click on your name and then "Admin Panel".
+With the account created and some models already loaded, we now need to set our default model. Navigate to the
+lower right corner of the chat box in the middle of the page and click on the model selection drop-down menu.
+Select "llama3.3:latest".
 
-.. figure:: ./images/open-webui-select-admin-panel.png
+.. figure:: ./images/open-webui-chat-select-model.png
    :width: 600
    :align: center
 
-   Open WebUI - Open Admin panel.
+   Open WebUI - Select Model.
 
-On the admin panel, select the "Settings" tab and then "Models" pane.
+With "llama3.3:latest" selected, now open the model selection drop-down again and click on "Set as default".
 
-.. figure:: ./images/open-webui-select-models.png
+.. figure:: ./images/open-webui-set-default-model.png
    :width: 600
    :align: center
 
-   Open WebUI - Admin panel - Settings.
+   Open WebUI - Select Model - Set default.
 
 On the Models pane, select the "Manage Models" button (downward arrow) on the far right side of the page to
 open the "Manage Models" dialog box. Enter "llama3.1:8b" in the "Pull a model from Ollama.com" text box and click

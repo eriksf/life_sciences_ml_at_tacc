@@ -1,11 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -eo pipefail
 
-OPEN_WEBUI_SIF="$SCRATCH/open-webui_v0.6.9-ollama.sif"
-OPEN_WEBUI_DIR="$SCRATCH/openwebui-data"
-OLLAMA_DATA="$OPEN_WEBUI_DIR/ollama"
-OPEN_WEBUI_DATA="$OPEN_WEBUI_DIR/open-webui"
-OPEN_WEBUI_STATIC="$OPEN_WEBUI_DIR/static"
-SECRET_KEY="$OPEN_WEBUI_DIR/.webui_secret_key"
+BASE="${BASE:-$SCRATCH/llm-stack}"
+SIF="$BASE/sif"; DATA="$BASE/data"; LOGS="$BASE/logs"
+mkdir -p "$SIF" "$LOGS" "$DATA"/{ollama,webui,tmp}
+
+TIKA_PORT=9998
+WEBUI_PORT=8080
 
 if command -v module &>/dev/null; then
     module unload xalt
@@ -13,45 +14,89 @@ if command -v module &>/dev/null; then
     module list
 fi
 
-if [[ ! -s "$OPEN_WEBUI_SIF" ]]; then
-    echo "Pulling open-webui image..."
-    apptainer pull docker://ghcr.io/open-webui/open-webui:v0.6.9-ollama
-fi
+# --- Build images once (on a node with internet access) ---
+[[ -f $SIF/tika.sif  ]] || apptainer pull "$SIF/tika.sif"  docker://apache/tika:4.1.0-1-full
+[[ -f $SIF/webui.sif ]] || apptainer pull "$SIF/webui.sif" docker://ghcr.io/open-webui/open-webui:0.12.3-ollama
 
-echo "Creating data directories, if needed..."
-mkdir -p $OPEN_WEBUI_DIR
-mkdir -p $OLLAMA_DATA
-mkdir -p $OPEN_WEBUI_DATA
-mkdir -p $OPEN_WEBUI_STATIC
-if [[ ! -s "$SECRET_KEY" ]]; then
-    echo "Creating secret key..."
-    echo $(head -c 12 /dev/random | base64) > $SECRET_KEY
-else
-    echo "Key already exists..."
-fi
+wait_for() {  # name url
+  for _ in $(seq 1 90); do
+    curl -fs "$2" >/dev/null 2>&1 && { echo "$1 up"; return; }
+    sleep 2
+  done
+  echo "$1 failed to start, see $LOGS/$1.log" >&2; return 1
+}
 
-WEBUI_SECRET_KEY=$(cat "$SECRET_KEY")
+# Define the cleanup function
+cleanup() {
+    echo "🧹 Running cleanup: Stopping Apptainer instances..."
 
-echo "Starting open-webui instance..."
-apptainer instance start  --nv \
-    --bind $OLLAMA_DATA:$HOME/.ollama \
-    --bind $OPEN_WEBUI_DATA:/app/backend/data \
-    --bind $OPEN_WEBUI_STATIC:/app/backend/static \
-    --env "WEBUI_SECRET_KEY=$WEBUI_SECRET_KEY" \
-    $OPEN_WEBUI_SIF \
-    openwebui1 \
-    > $SCRATCH/openwebui1.log 2>&1
+    # Check and stop tika
+    if apptainer instance list | grep -q "tika"; then
+        echo "Stopping tika..."
+        apptainer instance stop "tika"
+    fi
 
-sleep 5
+    # Check and stop webui
+    if apptainer instance list | grep -q "webui"; then
+        echo "Stopping webui..."
+        apptainer instance stop "webui"
+    fi
 
-echo "Running start script..."
-apptainer exec --env "WEBUI_SECRET_KEY=$WEBUI_SECRET_KEY" \
-    --env "CONFIG_LOG_LEVEL=DEBUG" \
-    --env "OLLAMA_LOG_LEVEL=DEBUG" \
-    --env "STATIC_DIR=/app/backend/static" \
-    instance://openwebui1 \
-    /app/backend/start.sh >> $SCRATCH/openwebui1.log 2>&1 &
+    echo "✅ Cleanup complete."
+}
+trap cleanup EXIT INT TERM
 
-sleep 10
+# --- Tika ---
+apptainer instance start --cleanenv "$SIF/tika.sif" tika
+nohup apptainer run instance://tika > "$LOGS/tika.log" 2>&1 &
+wait_for tika "http://127.0.0.1:$TIKA_PORT/tika"
 
-echo "To stop open-webui, type 'apptainer instance stop openwebui1'" 
+# --- Open WebUI + bundled Ollama (drop --nv if no NVIDIA GPU) ---
+apptainer instance start --cleanenv --nv --writable-tmpfs \
+  --bind "$DATA/webui:/app/backend/data" \
+  --bind "$DATA/ollama:/ollama-data" \
+  --bind "$DATA/tmp:/tmp" \
+  "$SIF/webui.sif" webui
+
+export APPTAINERENV_PORT="$WEBUI_PORT"
+export APPTAINERENV_HOST=127.0.0.1
+export APPTAINERENV_DATA_DIR=/app/backend/data
+export APPTAINERENV_OLLAMA_MODELS=/ollama-data
+export APPTAINERENV_CONTENT_EXTRACTION_ENGINE=tika
+export APPTAINERENV_TIKA_SERVER_URL="http://127.0.0.1:$TIKA_PORT"
+export APPTAINERENV_WEBUI_SECRET_KEY="${WEBUI_SECRET_KEY:-$(openssl rand -hex 16)}"
+export APPTAINERENV_HF_HUB_OFFLINE=0   # drop if the node can reach HuggingFace
+export APPTAINERENV_USE_OLLAMA_DOCKER=true   # in case --cleanenv/env handling drops the image default
+#export APPTAINERENV_ENABLE_RAG_HYBRID_SEARCH=true
+
+nohup apptainer exec --pwd /app/backend instance://webui bash start.sh \
+  > "$LOGS/webui.log" 2>&1 &
+
+wait_for webui "http://127.0.0.1:$WEBUI_PORT/health"
+
+# pull models for ollama
+MODELS=(
+    "llama3.3:latest"
+    "nomic-embed-text:latest"
+)
+
+echo "🔍 Checking Ollama model installations..."
+echo "----------------------------------------"
+
+# Get a clean list of all currently installed model names once to save processing time
+INSTALLED_MODELS=$(apptainer exec instance://webui ollama list | awk 'NR>1 {print $1}')
+
+for MODEL in "${MODELS[@]}"; do
+    if echo "$INSTALLED_MODELS" | grep -qx "$MODEL"; then
+        echo "✅ $MODEL is already installed."
+    else
+        echo "📥 $MODEL not found. Pulling now..."
+        apptainer exec instance://webui ollama pull "$MODEL"
+    fi
+done
+
+echo "🎉 All models are verified and ready!"
+
+echo "Open WebUI: http://127.0.0.1:$WEBUI_PORT"
+echo "Ctrl-C to stop all instances"
+wait
