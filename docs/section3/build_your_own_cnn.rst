@@ -4,18 +4,18 @@ Build Your Own Convolutional Neural Network
 Coral reefs are among the most diverse and valuable ecosystems on Earth, providing habitat for 25% of all marine species and supporting the livelihoods of over half a billion people worldwide.
 However, these ecosystems face unprecedented threats from climate change, ocean acidification, and other human activities, with many species now endangered.
 
-We are given a dataset containing images of three different coral species: 
+We are given a dataset containing images of three different coral species:
 
 - *Acropora cervicornis* (Staghorn Coral)
 - *Colpophyllia natans* (Boulder Brain Coral)
 - *Montastraea cavernosa* (Greater Star Coral)
 
-Our task is to build a Convolutional Neural Network (CNN) that can classify the coral images into the correct species. 
+Our task is to build a Convolutional Neural Network (CNN) that can classify the coral images into the correct species.
 This technology can help automate coral reef monitoring efforts and support conservation initiatives by enabling rapid, large-scale species identification.
 
 By the end of this exercise, you should be able to:
 
-* Import, explore, organize, visualize, and pre-process input image data 
+* Import, explore, organize, visualize, and pre-process input image data
 * Build and train a CNN from scratch
 * Build and train a CNN based on the VGG19 architecture (transfer learning)
 * Use callbacks to optimize the model performance during training
@@ -56,7 +56,7 @@ Part 1: Building a CNN Model from Scratch
 Step 0: Check GPU Availability and TensorFlow Version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before training deep learning models, it's important to check whether TensorFlow can access the GPU on your machine. Training on a GPU is significantly faster than on a CPU, especially for large image datasets. 
+Before training deep learning models, it's important to check whether TensorFlow can access the GPU on your machine. Training on a GPU is significantly faster than on a CPU, especially for large image datasets.
 
 If you've followed the setup instructions from `Introduction to Systems and Data: Set up for Tutorials <https://life-sciences-ml-at-tacc.readthedocs.io/en/latest/section1/set_up_for_tutorials.html>`_, you should now be running this notebook inside a containerized Jupyer kernel that includes:
 
@@ -91,8 +91,8 @@ You should see the following output:
 Step 1: Data Loading and Organization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this step, we load all coral images from the dataset directory and organize them into a DataFrame. 
-Each image is assigned a label based on the name of the directory it's stored in (i.e., 'ACER' - *Acropora cervicornis*, 'CNAT' - *Colpophyllia natans*, 'MCAV' - *Montastraea cavernosa*). 
+In this step, we load all coral images from the dataset directory and organize them into a DataFrame.
+Each image is assigned a label based on the name of the directory it's stored in (i.e., 'ACER' - *Acropora cervicornis*, 'CNAT' - *Colpophyllia natans*, 'MCAV' - *Montastraea cavernosa*).
 
 This DataFrame will serve as the foundation for splitting our data into training, validation, and test sets later in the tutorial.
 
@@ -145,8 +145,8 @@ You should see something like this:
 1.2 Check File Extensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, we scan the dataset directory and all its subdirectories to find out what types of image files are present. 
-This helps us catch unexpected or unsupported file types (e.g., GIFs, txt files, etc.), which could cause problems later when loading images. 
+Next, we scan the dataset directory and all its subdirectories to find out what types of image files are present.
+This helps us catch unexpected or unsupported file types (e.g., GIFs, txt files, etc.), which could cause problems later when loading images.
 
 This also allows us to see if the images are all in the same format or not.
 
@@ -169,7 +169,7 @@ This also allows us to see if the images are all in the same format or not.
 
 Before feeding images into a CNN, it's important to understand the basic properties of the dataset.
 In this step, we examine the **dimensions** (width x height) as well as the **color mode** (e.g., RGB, RGBA, grayscale) of each image.
-This helps us decide if we need to resize or convert images before we begin training our CNN. 
+This helps us decide if we need to resize or convert images before we begin training our CNN.
 
 The script below prints a summary and gives recommendations if inconsistencies are found.
 
@@ -228,25 +228,25 @@ The script below prints a summary and gives recommendations if inconsistencies a
 
     # Run the function
     explore_image_dataset(dataset_dir)
-    
+
 Our dataset analysis reveals some important characteristics that we'll need to keep in mind as we proceed with the tutorial:
 
  1. **Image Size Variation**: We have 417 total images in our dataset, with 63 different image sizes (dimensions). Also notice that some images are in portrait orientation (height > width) while others are landscape (width > height). CNNs expect all images to have the same dimensions, so we'll need to resize them to a standard size before training our model.
 
  2. **Color Mode**: All images share the same color mode. Great!
 
-We will address these issues in Step 4 when we prepare our data for input into the CNN. 
+We will address these issues in Step 4 when we prepare our data for input into the CNN.
 
 1.4 Check for Corrupted Images
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before continuing, we want to make sure that all images files are readable. 
-Corrupted files can break your model training or cause unexpected errors during preprocessing. 
+Before continuing, we want to make sure that all images files are readable.
+Corrupted files can break your model training or cause unexpected errors during preprocessing.
 
 In this step, we:
 
-  1. Attempt to open each '.jpg' file using PIL 
-  2. Discard any files that fail to load 
+  1. Attempt to open each '.jpg' file using PIL
+  2. Discard any files that fail to load
 
 This ensures we only keep clean, valid images for training.
 
@@ -283,7 +283,7 @@ This ensures we only keep clean, valid images for training.
     print(f"Valid images: {len(valid_images)}")
     print(f"Corrupted images removed: {len(bad_images)}")
 
-If there are any corrupted images in your dataset, this code will automatically remove them. 
+If there are any corrupted images in your dataset, this code will automatically remove them.
 
 
 1.5 Create a DataFrame of Image Paths and Labels
@@ -316,7 +316,7 @@ This structured DataFrame is essential for training with Keras' ``flow_from_data
 
     # Show a preview of the DataFrame
     df.head()
-    
+
 
 Step 2: Visualize the Data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -445,12 +445,12 @@ We are now ready to split our labeled image dataset into three parts:
 We will use the ``train_test_split`` function from sklearn in two stages:
 
   1. First, we split the original dataset into **training + test** sets
-  2. Then, we split the training set again into **training + validation** 
+  2. Then, we split the training set again into **training + validation**
 
 This approach ensures that our CNN *never sees the test set* during training, which is important for obtaining an unbiased estimate of the model's performance.
 
 To preserve the class distribution across splits, we use ``stratify=df["label"]`` to ensure each split has the same proportion of each class as in the original dataset.
-This is called **stratified sampling**. 
+This is called **stratified sampling**.
 
 .. code-block:: python
     :linenos:
@@ -485,7 +485,7 @@ This is called **stratified sampling**.
 3.2 Compute Class Weights
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If our dataset is imbalanced (i.e., some classes have many more images than others), the model may learn to favor those majority classes. 
+If our dataset is imbalanced (i.e., some classes have many more images than others), the model may learn to favor those majority classes.
 To address this, we can compute **class weights** based on the training data using the ``compute_class_weight`` function from sklearn.
 
 These weights:
@@ -494,7 +494,7 @@ These weights:
  - Are passed into ``model.fit()`` using the ``class_weight`` argument
  - Adjust how the loss is calculated during training
 
-This technique helps the model give balanced attention to all classes during training. 
+This technique helps the model give balanced attention to all classes during training.
 
 While our dataset is quite balanced, we provide the code for computing class weights below:
 
@@ -531,19 +531,19 @@ While our dataset is quite balanced, we provide the code for computing class wei
 
 In the above output, ``0`` corresponds to ``ACER``, ``1`` corresponds to ``CNAT``, and ``2`` corresponds to ``MCAV``. The class weights are inversely proportional to the number of samples in each class: classes with fewer samples get higher weights to compensate for their lower representation in the training data.
 
-We need to convert the string labels (like ``ACER``, ``CNAT``, and ``MCAV``) to integers (0, 1, 2) because the model expects numeric class indices. The ``class_weight_dict`` is a dictionary that maps each class index to its corresponding weight. 
+We need to convert the string labels (like ``ACER``, ``CNAT``, and ``MCAV``) to integers (0, 1, 2) because the model expects numeric class indices. The ``class_weight_dict`` is a dictionary that maps each class index to its corresponding weight.
 
 **Thought Challenge**: Look back at the pie chart and bar chart that we generated above. Do the class weights make sense? Why or why not?
 
 .. toggle:: Click to show
 
-    The class weights make sense because the class with the fewest samples (``CNAT``) has the highest weight (1.08), while the class with the most samples (``MCAV``) has the lowest weight (0.91). This means that the model will pay more attention to the ``CNAT`` class during training, which has fewer samples. 
+    The class weights make sense because the class with the fewest samples (``CNAT``) has the highest weight (1.08), while the class with the most samples (``MCAV``) has the lowest weight (0.91). This means that the model will pay more attention to the ``CNAT`` class during training, which has fewer samples.
 
 
 Step 4: Image Preprocessing and Data Generators
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As we discovered in Step 1.3, we need to prepare our images before feeding them into the CNN. 
+As we discovered in Step 1.3, we need to prepare our images before feeding them into the CNN.
 This step involves two key concepts: **Data Generators** and **Data Augmentation**.
 
 **Data generators** are special tools that help us efficiently load and preprocess image data in small batches (instead of all at once).
@@ -551,9 +551,9 @@ Keras provides a built-in data generator called ``ImageDataGenerator`` that can:
 
   - Resize all images to a consistent size
   - Normalize pixel values (e.g., from [0-255] to [0-1])
-  - Augment the training data with random transformations to improve generalization 
+  - Augment the training data with random transformations to improve generalization
 
-Data generators can be used with Keras model methods like ``fit()``, ``evaluate()``, and ``predict()``, which is particularly useful when dealing with large datasets that don't all fit into memory at once.  
+Data generators can be used with Keras model methods like ``fit()``, ``evaluate()``, and ``predict()``, which is particularly useful when dealing with large datasets that don't all fit into memory at once.
 
 **Data augmentation** is a powerful technique that helps our model learn more robust features by creating variations of our training images.
 Augmentation techniques not only expand the size of our training set, but also help prevent overfitting by exposing our model to different variations of our images.
@@ -702,10 +702,10 @@ Let's display a few images from the training geneator along with their decoded c
 
 
 **Thought Challenge**: Look carefully at the images displayed above.
-Try running the code cell multiple times and changing the code to display images from the validation and test generators. 
+Try running the code cell multiple times and changing the code to display images from the validation and test generators.
 What do you notice about the images that you didn't see before (in Step 3)?
-Do you notice any differences in the images each time you run the cell? 
-Think about why this might be happening. 
+Do you notice any differences in the images each time you run the cell?
+Think about why this might be happening.
 
 
 Step 5: Define Your CNN Model Architecture
@@ -713,7 +713,7 @@ Step 5: Define Your CNN Model Architecture
 
 Congratulations! Our data is now ready to be used to train a Convolutional Neural Network to classify our coral images.
 
-In this step, we will define the architecture of our CNN model. 
+In this step, we will define the architecture of our CNN model.
 Below, we define a model that consists of three main parts:
 
  1. **Convolutional Blocks** (Feature Extraction):
@@ -760,7 +760,7 @@ Below, we define a model that consists of three main parts:
         # Fully connected layers
         Dense(128, activation='relu'),
         Dense(64, activation='relu'),
-        Dense(___, activation='___')   
+        Dense(___, activation='___')
     ])
 
 Once you have filled in the blanks and defined your model, let's compile it:
@@ -865,9 +865,9 @@ For a convolutional layer, the number of parameters is determined by the size of
 - ``Kernel width x Kernel height``: The size of each kernel (e.g., a 3x3 kernel has 9 weights per input channel)
 - ``Input channels``: The number of channels in the input image (e.g., 3 for RGB images)
 - ``+1``: Each kernel also has 1 bias term.
-- ``kernels``: The number of kernels you want to use. This is how many output channels you'll get from this layer. Each kernel is applied independently and learns different features. 
+- ``kernels``: The number of kernels you want to use. This is how many output channels you'll get from this layer. Each kernel is applied independently and learns different features.
 
-**Thought Challenge**: What is the formula for calculating the number of parameters in a dense layer? Can you correctly calculate the total number of parameters in our model? Write down each step of your calculation. 
+**Thought Challenge**: What is the formula for calculating the number of parameters in a dense layer? Can you correctly calculate the total number of parameters in our model? Write down each step of your calculation.
 
 .. toggle:: Click to show
 
@@ -889,7 +889,7 @@ For a convolutional layer, the number of parameters is determined by the size of
      * (3 x 3 x 64 + 1) x 128 = 73,856 parameters
 
     **Dense Layers**
-        
+
     Formula: ``(Input units x Output units) + Output units``
 
     4. First Dense:
@@ -899,11 +899,11 @@ For a convolutional layer, the number of parameters is determined by the size of
 
     5. Second Dense:
 
-     * 128 Input units, 64 Output units 
+     * 128 Input units, 64 Output units
      * (128 x 64) + 64 = 8,256 parameters
 
     6. Output Dense:
-    
+
      * 64 Input units, 3 Output units
      * (64 x 3) + 3 = 195 parameters
 
@@ -911,14 +911,14 @@ For a convolutional layer, the number of parameters is determined by the size of
 Step 6: Train the CNN Model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now that our CNN architecture is defined, we can train the model using the ``fit()`` method. 
+Now that our CNN architecture is defined, we can train the model using the ``fit()`` method.
 
 During training, the model will learn patterns in the training data and adjust its parameters to minimize the loss function.
-After each epoch, the model's performance is evaluated on the validation set. 
+After each epoch, the model's performance is evaluated on the validation set.
 
 Here, we will also pass in ``class_weight`` to demonstrate how to handle imbalanced data.
 
-We also track the training history, which we'll use later to visualize performance over time. 
+We also track the training history, which we'll use later to visualize performance over time.
 
 .. code-block:: python
     :linenos:
@@ -968,8 +968,8 @@ We use the ``cnn_history`` object returned by the ``fit()`` method to plot the t
         epochs = range(1, len(acc) + 1)
 
         # Set color palette
-        training_color = '#fc8d59'    
-        validation_color = '#91bfdb'  
+        training_color = '#fc8d59'
+        validation_color = '#91bfdb'
 
         # Plot accuracy
         plt.figure(figsize=(14, 5))
@@ -1015,7 +1015,7 @@ The plots above show the training and validation accuracy/loss over 15 epochs.
 
 Step 7: Evaluate the Model on the Test Set
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 Now that we've trained our model, it's time to evaluate its performance on the test set.
 This step is crucial because it helps us understand how well the model generalizes to new, unseen data, which is a good indicator of its real-world performance.
 
@@ -1122,7 +1122,7 @@ Click below to see a brief explanation of the metrics in the classification repo
 
 .. toggle:: Click to show
 
-    **Precision**: The ratio of correctly predicted positive observations to the total predicted positives. 
+    **Precision**: The ratio of correctly predicted positive observations to the total predicted positives.
 
      - Formula: :math:`\frac{\text{True Positives}}{\text{True Positives} + \text{False Positives}}`
      - Interpretation: High precision indicates a low false positive rate, which is useful when the cost of false positives is high.
@@ -1131,15 +1131,15 @@ Click below to see a brief explanation of the metrics in the classification repo
 
      - Formula: :math:`\frac{\text{True Positives}}{\text{True Positives} + \text{False Negatives}}`
      - Interpretation: High recall indicates a low false negative rate, which is useful when the cost of false negatives is high.
-  
-    **F1-score**: The weighted average of precision and recall. It considers both false positives and false negatives. 
+
+    **F1-score**: The weighted average of precision and recall. It considers both false positives and false negatives.
 
      - Formula: :math:`2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}`
      - Interpretation: The F1-score is useful when you need to balance precision and recall. It provides a single score that considers both false positives and false negatives.
 
     **Support**: The number of actual occurrences of the class in the test data.
 
-**Thought Challenge**: Critically assess the performance of our model based on the accuracy/loss values, confusion matrix, and classification report. 
+**Thought Challenge**: Critically assess the performance of our model based on the accuracy/loss values, confusion matrix, and classification report.
 Are there any classes that the model is particularly good or bad at predicting? Think about the data and why the model might be performing better or worse for certain classes.
 
 
@@ -1151,10 +1151,10 @@ In this section, we apply a technique called **transfer learning** to improve mo
 **Transfer learning** is a deep learning technique where we *reuse a model that has already been trained on a large dataset for a different but related task*.
 Instead of starting from scratch, we "transfer" the knowledge learned by the pre-trained model to our new task.
 
-This is especially useful when you have a limited dataset, you want to train a model faster, or you want to achieve better accuracy with less computational effort. 
+This is especially useful when you have a limited dataset, you want to train a model faster, or you want to achieve better accuracy with less computational effort.
 
 We will use the **VGG19 model**, a classic convolutional neural network architecture developed by researchers at Oxford University.
-It was trained on the **ImageNet** dataset, which contains over 14 million images across 1000 classes. 
+It was trained on the **ImageNet** dataset, which contains over 14 million images across 1000 classes.
 
 
 Step 1: Prepare Data for VGG19
@@ -1165,7 +1165,7 @@ Step 1: Prepare Data for VGG19
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 VGG19 expects input images to be preprocessed in a very specific way because of the way it was trained.
-We use the ``preprocess_input()`` function from ``tensorflow.keras.applications.vgg19`` to preprocess our images. 
+We use the ``preprocess_input()`` function from ``tensorflow.keras.applications.vgg19`` to preprocess our images.
 Specifically, this function converts RGB pixel values to the format VGG19 was originally trained on (i.e., channels in BGR order, zero-centered with respect to ImageNet).
 
 Let's create new data generators for VGG19 using ``ImageDataGenerator`` with:
@@ -1271,7 +1271,7 @@ Now, let's compile the model with the same optimizer and loss function as our pr
 2.2 Define Training Callbacks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, let's define some **training callbacks**. 
+Next, let's define some **training callbacks**.
 Callbacks are functions executed during training that allow the training process to change its behavior dynamically.
 
 Some common callbacks include:
@@ -1331,7 +1331,7 @@ Example Output:
 Visualizing Training History
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Just like we did for our first CNN model, let's plot the training and validation performance over time. 
+Just like we did for our first CNN model, let's plot the training and validation performance over time.
 
 Refer back to Section 1: Step 6 – *Visualizing Training History* for a refresher on how to do this.
 
@@ -1466,7 +1466,7 @@ First, let's take the raw predictions from our VGG19 model and organize them int
  - ``Predicted Label``: What our model thinks the species is
  - ``Confidence``: How confident our model is in its prediction (0-1)
 
-This organized DataFrame makes it easy to save our model's predictions and create visualizations of the results. 
+This organized DataFrame makes it easy to save our model's predictions and create visualizations of the results.
 
 .. code-block:: python
     :linenos:
@@ -1553,7 +1553,7 @@ Congratulations!
 
 
 Next Steps
-~~~~~~~~~~
+^^^^^^^^^^
 
 To further enhance your model, consider the following ideas:
 
@@ -1572,5 +1572,5 @@ Thank you for following along! You've made significant progress in understanding
 Additional Resources
 --------------------
 
-* Adapted from: 
+* Adapted from:
   `COE 379L: Software Design For Responsible Intelligent Systems <https://coe-379l-sp24.readthedocs.io/en/latest/index.html>`_
